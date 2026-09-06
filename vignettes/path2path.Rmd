@@ -1,0 +1,163 @@
+---
+title: "path2path: directional pathway-by-pathway maps from Perturb-seq"
+author: "Jun Li"
+package: path2path
+bibliography: references.bib
+output:
+  BiocStyle::html_document:
+    toc: true
+vignette: >
+  %\VignetteIndexEntry{path2path: directional pathway maps from Perturb-seq}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", fig.crop = FALSE)
+set.seed(1)
+```
+
+# What path2path computes
+
+A genome-scale Perturb-seq screen is, in effect, thousands of parallel
+differential-expression experiments: each perturbed gene yields a signed
+per-gene statistic across all measured genes, and the results stack into a
+perturbation-by-gene matrix $Z$. `path2path` turns this matrix into a
+**directional pathway-by-pathway interaction map** $\mathbf{M}$ by running
+preranked GSEA twice [@subramanian2005; @korotkevich2019]:
+
+* **Stage 1** scores every *row* of $Z$ (one perturbation) against a pathway
+  collection, giving each perturbation a pathway-response profile;
+* **Stage 2** ranks the perturbations along each pathway *column* of the
+  Stage 1 matrix and scores, for every pathway $j$, whether perturbations of
+  $j$'s members concentrate at either end.
+
+Entry $\mathbf{M}_{jk} > 0$ means that perturbations targeting members of
+pathway $j$ are enriched toward higher Stage 1 scores for pathway $k$. In a
+loss-of-function screen, when those scores reflect decreased expression of
+pathway $k$ after perturbation, a positive entry suggests that $j$ supports or
+activates the transcriptional program represented by $k$; a negative entry
+suggests suppression. The map therefore identifies candidate activating and
+suppressive relationships. It is asymmetric because $\mathbf{M}_{jk}$ and
+$\mathbf{M}_{kj}$ summarize different perturbation-readout combinations.
+
+Three safeguards are built in: the perturbed gene is excluded from its own
+ranked list (removing an on-target tautology that otherwise dominates the
+self-interaction diagonal), effective-size filters are applied in both
+stages, and entries whose pathway pair overlaps at Jaccard $> 0.5$ are
+masked.
+
+# A five-minute tour on synthetic data
+
+The package ships a small simulated dataset with two planted relations:
+PATHWAY_A activates PATHWAY_B, and PATHWAY_C suppresses PATHWAY_D.
+
+```{r demo}
+library(path2path)
+data(demo_z)
+data(demo_pathways)
+dim(demo_z)
+```
+
+Build the map (a serial backend keeps this vignette deterministic; on real
+data use the default `BiocParallel::bpparam()`):
+
+```{r pipeline}
+res <- path2path(demo_z, demo_pathways,
+    stage1 = list(nperm = 200, min_size = 5),
+    stage2 = list(min_pu = 5),
+    BPPARAM = BiocParallel::SerialParam(RNGseed = 1),
+    verbose = FALSE)
+round(res$M, 2)
+```
+
+Both planted relations are recovered with the right sign and direction, and
+the reverse entries are untestable (B and D members were not perturbed, so
+those rows fall below the Stage 2 universe filter):
+
+```{r planted}
+res$M["PATHWAY_A", "PATHWAY_B"]   # activation, > 0
+res$M["PATHWAY_C", "PATHWAY_D"]   # suppression, < 0
+res$padj["PATHWAY_A", "PATHWAY_B"]
+```
+
+Plot the map with significance dots:
+
+```{r plot, fig.width = 6, fig.height = 5}
+plot_map(res, padj_cutoff = 0.05)
+```
+
+And inspect *why* one entry is strong, at the level of the underlying
+ranking:
+
+```{r entry, fig.width = 6, fig.height = 3.5}
+plot_entry(res, demo_pathways, "PATHWAY_A", "PATHWAY_B")
+```
+
+# Real data
+
+For a real screen, the input is the perturbation-by-gene matrix of
+differential-expression statistics (a DESeq2 Wald $z$, a $z$-normalized
+pseudobulk difference, or a signed log-fold change), with rows named by the
+perturbed gene symbols:
+
+```{r real, eval = FALSE}
+z <- read_input_matrix("zscore_myscreen.csv.gz")
+pathways <- load_pathways("hallmark")     # or "reactome", "kegg_legacy", ...
+res <- path2path(z, pathways)
+write_result(res, dir = "results", tag = "myscreen",
+    collection = "hallmark")
+```
+
+If the statistics are stored in a `SummarizedExperiment` assay with genes in
+rows and perturbations in columns, use `as_path2path_matrix()` to transpose
+and validate the assay. `as_path2path_se()` converts a completed map back to a
+`SummarizedExperiment` whose map and p-value matrices are assays.
+
+Reproducibility: `BiocParallel` backends draw worker seeds from entropy
+unless given one explicitly, so `set.seed()` alone is not enough --- pass
+`BPPARAM = MulticoreParam(RNGseed = 1)` (or `SerialParam(RNGseed = 1)`)
+to make a run exactly repeatable.
+
+Orientation: statistics are negated internally for loss-of-function screens
+(CRISPRi/knockout, the default); set `stage1 = list(negate = FALSE)` for
+gain-of-function screens (CRISPRa, overexpression).
+
+# Two routes to significance
+
+`path2path()` attaches **Route A** p-values: the Stage 2 nominal p-values
+(`fgsea::fgseaMultilevel`) with one Benjamini-Hochberg family over all
+populated entries. On the datasets analyzed in the accompanying manuscript,
+the realized false-discovery rate of BH screening at 0.05 remained close to
+the nominal level across datasets and pathway collections, and the null
+distribution of the nominal p-values was close to uniform over the range that
+could be assessed by permutation.
+
+For *individually examined* strong entries, **Route B** reruns the full
+pipeline on row/column-permuted inputs, pools the null $|\mathbf{M}'|$ values,
+and extrapolates the extreme tail with a generalized-Pareto fit
+[@knijnenburg2009]:
+
+```{r routeb, eval = FALSE}
+cal <- calibrate_pvalues(res, demo_z, demo_pathways, B = 50, seed_base = 42)
+cal$gpd[c("u", "xi", "beta", "n_exc")]
+cal$pval_gpd["PATHWAY_A", "PATHWAY_B"]
+```
+
+```{r calplot, eval = FALSE, fig.width = 7, fig.height = 3.5}
+plot_calibration(cal)
+```
+
+`seed_base` makes each input permutation reproducible. For exact
+reproducibility of the full null runs, also supply seeded `BPPARAM` objects;
+`null_dir` persists completed null maps so interrupted runs can resume. Route A
+provides the computationally lighter default for routine screening, while
+Route B carries uncertainty from both stages through the permutation.
+
+# Session info
+
+```{r sessioninfo}
+sessionInfo()
+```
+
+# References

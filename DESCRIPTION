@@ -1,0 +1,36 @@
+Package: path2path
+Type: Package
+Title: Directional Pathway-by-Pathway Interaction Maps from
+        Genome-Scale Perturb-Seq
+Version: 0.99.2
+Authors@R: person("Jun", "Li", email = "jun.li@nd.edu",
+    role = c("aut", "cre"), comment = c(ORCID = "0000-0003-4353-5761"))
+Description: Builds a directional pathway-by-pathway interaction map from
+    genome-scale Perturb-seq differential-expression statistics by two
+    stacked runs of preranked gene set enrichment analysis: once per
+    perturbation over genes, then once per readout pathway over
+    perturbations. Entry (j,k) of the resulting matrix measures whether
+    perturbations targeting pathway j's members produce a coordinated
+    transcriptional response in pathway k. The package includes target
+    exclusion, effective-size filters, overlap masking, Stage 2 p-values
+    with false-discovery-rate control, and a whole-pipeline permutation
+    calibration with generalized-Pareto tail estimation.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Depends: R (>= 4.4.0)
+Imports: fgsea, msigdbr, data.table, BiocParallel, withr, methods,
+        stats, utils, grDevices, graphics
+Suggests: ggplot2, testthat (>= 3.0.0), knitr, rmarkdown, BiocStyle,
+        SummarizedExperiment
+VignetteBuilder: knitr
+biocViews: Software, GeneSetEnrichment, Pathways, CRISPR, SingleCell,
+        DifferentialExpression, Transcriptomics, NetworkInference,
+        GeneExpression, GeneTarget, KEGG
+URL: https://github.com/jli-stat/path2path
+BugReports: https://github.com/jli-stat/path2path/issues
+Config/testthat/edition: 3
+Config/roxygen2/version: 8.1.0
+NeedsCompilation: no
+Packaged: 2026-09-06 16:37:57 UTC; jli
+Author: Jun Li [aut, cre] (<https://orcid.org/0000-0003-4353-5761>)
+Maintainer: Jun Li <jun.li@nd.edu>
