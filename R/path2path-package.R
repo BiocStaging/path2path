@@ -19,4 +19,16 @@
 #' analysis. bioRxiv. doi:10.1101/060012.
 #' @author Jun Li
 #' @keywords internal
+#'
+#' @importFrom BiocParallel MulticoreParam SerialParam bplapply bpparam
+#' @importFrom data.table as.data.table data.table fread fwrite
+#' @importFrom fgsea calcGseaStat fgseaMultilevel fgseaSimple plotEnrichment
+#' @importFrom grDevices colorRampPalette
+#' @importFrom graphics abline axis box image layout legend lines mtext par
+#'   plot points rect
+#' @importFrom methods is
+#' @importFrom msigdbr msigdbr
+#' @importFrom stats dist hclust median optim p.adjust quantile sd setNames
+#' @importFrom utils head modifyList write.table
+#' @importFrom withr with_seed
 "_PACKAGE"
