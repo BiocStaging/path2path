@@ -2,7 +2,7 @@ Package: path2path
 Type: Package
 Title: Directional Pathway-by-Pathway Interaction Maps from
         Genome-Scale Perturb-Seq
-Version: 0.99.2
+Version: 0.99.3
 Authors@R: person("Jun", "Li", email = "jun.li@nd.edu",
     role = c("aut", "cre"), comment = c(ORCID = "0000-0003-4353-5761"))
 Description: Builds a directional pathway-by-pathway interaction map from
@@ -25,12 +25,11 @@ Suggests: ggplot2, testthat (>= 3.0.0), knitr, rmarkdown, BiocStyle,
 VignetteBuilder: knitr
 biocViews: Software, GeneSetEnrichment, Pathways, CRISPR, SingleCell,
         DifferentialExpression, Transcriptomics, NetworkInference,
-        GeneExpression, GeneTarget, KEGG
+        GeneExpression, GeneTarget, KEGG, WholeGenome
 URL: https://github.com/jli-stat/path2path
 BugReports: https://github.com/jli-stat/path2path/issues
 Config/testthat/edition: 3
 Config/roxygen2/version: 8.1.0
 NeedsCompilation: no
-Packaged: 2026-09-06 16:37:57 UTC; jli
 Author: Jun Li [aut, cre] (<https://orcid.org/0000-0003-4353-5761>)
 Maintainer: Jun Li <jun.li@nd.edu>
