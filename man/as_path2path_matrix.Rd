@@ -10,7 +10,7 @@ as_path2path_matrix(x, assay = 1L)
 \item{x}{a `SummarizedExperiment` with genes in rows and perturbations
 in columns.}
 
-\item{assay}{assay name or index passed to
+\item{assay}{character(1) or integer(1): assay name or index passed to
 `SummarizedExperiment::assay()`.}
 }
 \value{

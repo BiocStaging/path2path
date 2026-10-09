@@ -5,15 +5,18 @@
 #' code path: production runs, calibration permutations, and sensitivity
 #' analyses must all go through this function.
 #'
-#' @param z perturbations x genes matrix (rownames = perturbed gene symbols).
-#' @param pathways named list of gene-symbol vectors.
+#' @param z numeric matrix, perturbations x genes (rownames = perturbed
+#'   gene symbols, colnames = measured gene symbols).
+#' @param pathways named list of character vectors of gene symbols.
 #' @param stage1,stage2 named lists of overrides forwarded to stage1_nes()
 #'   and stage2_matrix().
-#' @param jaccard_tau mask threshold; NA_real_ disables masking.
+#' @param jaccard_tau numeric(1) in [0, 1]: mask threshold; NA_real_
+#'   disables masking.
 #' @param BPPARAM a \code{BiocParallel} parameter object forwarded to both
 #'   stages (a \code{BPPARAM} entry inside \code{stage1}/\code{stage2}
 #'   takes precedence for that stage).
-#' @param verbose emit per-stage timing messages.
+#' @param verbose logical(1): emit per-stage timing messages
+#'   (default \code{FALSE}).
 #' @return list(nes, pval_stage1, M_raw, M, pval, padj, ..., config).
 #'   `config` records the stage1/stage2 overrides and jaccard_tau of this
 #'   call, so that calibrate_pvalues() can rerun the identical configuration
@@ -39,7 +42,7 @@ path2path <- function(z, pathways,
                       stage2     = list(),
                       jaccard_tau = 0.5,
                       BPPARAM    = BiocParallel::bpparam(),
-                      verbose    = TRUE) {
+                      verbose    = FALSE) {
     .check_matrix_input(z, "z")
     .check_pathways(pathways)
     if (!is.numeric(jaccard_tau) || length(jaccard_tau) != 1L ||

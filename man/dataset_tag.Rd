@@ -7,7 +7,7 @@
 dataset_tag(path)
 }
 \arguments{
-\item{path}{a file path such as \code{zscore_myexp.csv.gz}.}
+\item{path}{character(1): a file path such as \code{zscore_myexp.csv.gz}.}
 }
 \value{
 the tag string (\code{"myexp"}).

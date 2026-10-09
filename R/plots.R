@@ -52,15 +52,21 @@
 #' p-values). Masked/filtered entries are gray.
 #'
 #' @inheritParams select_active
-#' @param rows,cols optional name subsets applied before anything else.
-#' @param drop_empty_rows,drop_empty_cols drop all-NA rows/columns.
-#' @param order a character vector or list(rows=, cols=) fixing the order.
-#' @param cluster two-directional hierarchical clustering when no `order`.
-#' @param labels force axis labels on/off (default: on up to 60 pathways).
-#' @param zlim color range in NES units.
-#' @param main plot title.
-#' @param colorbar draw the NES colorbar.
-#' @param dot_cex significance-dot size (default scales with map size).
+#' @param rows,cols `NULL` or character vectors: optional name subsets
+#'   applied before anything else.
+#' @param drop_empty_rows,drop_empty_cols logical(1) each: drop all-NA
+#'   rows/columns.
+#' @param order `NULL`, a character vector, or list(rows=, cols=) fixing
+#'   the order.
+#' @param cluster logical(1): two-directional hierarchical clustering when
+#'   no `order`.
+#' @param labels `NULL` or logical(1): force axis labels on/off (default:
+#'   on up to 60 pathways).
+#' @param zlim numeric(2): color range in NES units.
+#' @param main `NULL` or character(1): plot title.
+#' @param colorbar logical(1): draw the NES colorbar.
+#' @param dot_cex `NULL` or numeric(1): significance-dot size (default
+#'   scales with map size).
 #' @return (invisible) list(rows, cols): the plotted ordering, reusable as
 #'   the `order` argument for another map.
 #' @examples
@@ -176,10 +182,13 @@ plot_map <- function(result, calibrated = NULL,
 #' members of pathway j, via fgsea::plotEnrichment(). The title reports the
 #' entry's NES and its p-value (Route B if `calibrated` is given).
 #'
-#' @param result a \code{path2path()} result.
-#' @param pathways the collection used to build `result`.
-#' @param j,k pathway names: the perturbed (row) and readout (column) side.
-#' @param calibrated optional \code{calibrate_pvalues()} result; switches
+#' @param result a list as returned by \code{path2path()}.
+#' @param pathways named list of character vectors: the collection used to
+#'   build `result`.
+#' @param j,k character(1) each, pathway names: the perturbed (row) and
+#'   readout (column) side.
+#' @param calibrated `NULL` or a list as returned by
+#'   \code{calibrate_pvalues()}; switches
 #'   the title to Route B values.
 #' @return a ggplot object.
 #' @examples
@@ -225,7 +234,7 @@ plot_entry <- function(result, pathways, j, k, calibrated = NULL) {
 #' fitted GPD tail overlaid beyond the threshold u. Right: QQ plot of the
 #' exceedances against fitted GPD quantiles. Both panels support the
 #' judgment the user makes before quoting a pval_gpd: does the tail fit?
-#' @param calibrated a \code{calibrate_pvalues()} result carrying
+#' @param calibrated a list as returned by \code{calibrate_pvalues()} carrying
 #'   \code{pool_abs} and \code{gpd}.
 #' @return invisible(NULL); draws two base-graphics panels.
 #' @examples

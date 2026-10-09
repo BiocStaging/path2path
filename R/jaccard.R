@@ -1,5 +1,5 @@
 #' Pairwise Jaccard similarity of pathway gene sets (dense crossproduct).
-#' @param pathways named list of gene-symbol vectors.
+#' @param pathways named list of character vectors of gene symbols.
 #' @return K x K similarity matrix (diagonal set to 0; it is never masked).
 #' @examples
 #' data(demo_pathways)
@@ -25,10 +25,12 @@ pathway_jaccard <- function(pathways) {
 #' High-overlap pairs (Reactome parent/child etc.) score mechanically —
 #' j's members ride k's signal because they ARE k's members — which is
 #' gene-set structure, not causal regulation. Diagonal is never masked.
-#' @param M K x K matrix to mask.
-#' @param pathways named list of gene-symbol vectors.
-#' @param tau overlap threshold; entries with Jaccard > tau become NA.
-#' @param jaccard optional precomputed \code{pathway_jaccard()} matrix.
+#' @param M K x K numeric matrix to mask (dimnames = pathway names).
+#' @param pathways named list of character vectors of gene symbols.
+#' @param tau numeric(1) in [0, 1]: overlap threshold; entries with
+#'   Jaccard > tau become NA.
+#' @param jaccard `NULL` or numeric matrix: optional precomputed
+#'   \code{pathway_jaccard()} matrix.
 #' @return M with high-overlap off-diagonal entries set to NA.
 #' @examples
 #' data(demo_pathways)

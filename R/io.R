@@ -1,5 +1,6 @@
 #' Read a z-score CSV (rows = perturbed gene symbols in first column).
-#' @param path CSV or CSV.GZ file; first column = perturbed gene symbols,
+#' @param path character(1): CSV or CSV.GZ file; first column = perturbed
+#'   gene symbols,
 #'   remaining columns = measured genes.
 #' @return numeric matrix with dimnames.
 #' @examples
@@ -27,7 +28,7 @@ read_input_matrix <- function(path) {
 #'
 #' @param x a `SummarizedExperiment` with genes in rows and perturbations
 #'   in columns.
-#' @param assay assay name or index passed to
+#' @param assay character(1) or integer(1): assay name or index passed to
 #'   `SummarizedExperiment::assay()`.
 #' @return a numeric perturbation-by-gene matrix.
 #' @examples
@@ -57,7 +58,7 @@ as_path2path_matrix <- function(x, assay = 1L) {
 #' Bioconductor infrastructure. The Stage 1 matrix remains available in the
 #' original result object.
 #'
-#' @param result a standard `path2path()` result containing `M`.
+#' @param result a list, a standard `path2path()` result containing `M`.
 #' @return a `SummarizedExperiment` with pathways as rows and readout
 #'   pathways as columns.
 #' @examples
@@ -101,10 +102,12 @@ as_path2path_se <- function(result) {
 #' outputs are written alongside: pval_gpd_matrix_<ns>.csv,
 #'   pval_pool_matrix_<ns>.csv, gpd_params_<ns>.csv, and the null pool
 #'   as null_pool_<ns>.rds (for reuse via calibrate_pvalues(pool =)).
-#' @param result a \code{path2path()} result.
-#' @param dir output directory.
-#' @param tag,collection,method components of the file namespace.
-#' @param calibrated optional \code{calibrate_pvalues()} result.
+#' @param result a list as returned by \code{path2path()}.
+#' @param dir character(1): output directory.
+#' @param tag,collection,method character(1) each: components of the file
+#'   namespace.
+#' @param calibrated `NULL` or a list as returned by
+#'   \code{calibrate_pvalues()}.
 #' @return (invisible) the namespace string used in filenames.
 #' @examples
 #' data(demo_z)
@@ -165,7 +168,7 @@ write_result <- function(result, dir, tag, collection, method = "fgsea",
 }
 
 #' Dataset tag from a zscore_<tag>.csv[.gz] filename.
-#' @param path a file path such as \code{zscore_myexp.csv.gz}.
+#' @param path character(1): a file path such as \code{zscore_myexp.csv.gz}.
 #' @return the tag string (\code{"myexp"}).
 #' @examples
 #' dataset_tag("zscore_k562_gwps.csv.gz")

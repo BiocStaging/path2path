@@ -15,17 +15,20 @@ select_active(
 )
 }
 \arguments{
-\item{result}{a \code{path2path()} result.}
+\item{result}{a list as returned by \code{path2path()}.}
 
-\item{calibrated}{optional \code{calibrate_pvalues()} result (switches
+\item{calibrated}{`NULL` or a list as returned by
+\code{calibrate_pvalues()} (switches
 the cutoffs to Route B values).}
 
-\item{padj_cutoff, pval_cutoff}{significance cutoffs; non-NULL cutoffs
+\item{padj_cutoff, pval_cutoff}{`NULL` or numeric(1) each: significance
+cutoffs; non-NULL cutoffs
 conjoin, NULL disables one (at least one must be enabled).}
 
-\item{min_sig}{minimum number of significant entries.}
+\item{min_sig}{integer(1): minimum number of significant entries.}
 
-\item{include_diag}{count the self-interaction diagonal (default FALSE,
+\item{include_diag}{logical(1): count the self-interaction diagonal
+(default FALSE,
 matching the paper's off-diagonal focus; only applies to square maps).}
 }
 \value{

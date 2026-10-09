@@ -12,15 +12,16 @@ load_pathways(
 )
 }
 \arguments{
-\item{collection}{one of "hallmark", "reactome", "kegg", "kegg_medicus",
+\item{collection}{character(1), one of "hallmark", "reactome", "kegg",
+"kegg_medicus",
 "kegg_legacy", "pid", "wikipathways". Note that "kegg" resolves to
 KEGG_MEDICUS (the current KEGG subcollection in MSigDB); use
 "kegg_legacy" for the classic 186-set collection.}
 
-\item{min_size, max_size}{global size window applied when
+\item{min_size, max_size}{integer(1) each: global size window applied when
 `size_filter` is active for the collection.}
 
-\item{species}{passed to \code{msigdbr::msigdbr}.}
+\item{species}{character(1): passed to \code{msigdbr::msigdbr}.}
 }
 \value{
 named list of character vectors

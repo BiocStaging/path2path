@@ -7,13 +7,15 @@
 write_result(result, dir, tag, collection, method = "fgsea", calibrated = NULL)
 }
 \arguments{
-\item{result}{a \code{path2path()} result.}
+\item{result}{a list as returned by \code{path2path()}.}
 
-\item{dir}{output directory.}
+\item{dir}{character(1): output directory.}
 
-\item{tag, collection, method}{components of the file namespace.}
+\item{tag, collection, method}{character(1) each: components of the file
+namespace.}
 
-\item{calibrated}{optional \code{calibrate_pvalues()} result.}
+\item{calibrated}{`NULL` or a list as returned by
+\code{calibrate_pvalues()}.}
 }
 \value{
 (invisible) the namespace string used in filenames.

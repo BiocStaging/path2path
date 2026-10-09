@@ -47,13 +47,16 @@
 #' count would drown the readout side. The result plugs directly into
 #' plot_map(): `plot_map(res, rows = sel$rows, cols = sel$cols)`.
 #'
-#' @param min_sig minimum number of significant entries.
-#' @param include_diag count the self-interaction diagonal (default FALSE,
+#' @param min_sig integer(1): minimum number of significant entries.
+#' @param include_diag logical(1): count the self-interaction diagonal
+#'   (default FALSE,
 #'   matching the paper's off-diagonal focus; only applies to square maps).
-#' @param result a \code{path2path()} result.
-#' @param calibrated optional \code{calibrate_pvalues()} result (switches
+#' @param result a list as returned by \code{path2path()}.
+#' @param calibrated `NULL` or a list as returned by
+#'   \code{calibrate_pvalues()} (switches
 #'   the cutoffs to Route B values).
-#' @param padj_cutoff,pval_cutoff significance cutoffs; non-NULL cutoffs
+#' @param padj_cutoff,pval_cutoff `NULL` or numeric(1) each: significance
+#'   cutoffs; non-NULL cutoffs
 #'   conjoin, NULL disables one (at least one must be enabled).
 #' @return list(rows = character, cols = character)
 #' @examples
@@ -83,9 +86,9 @@ select_active <- function(result, calibrated = NULL,
 #' (zero-count ones last), so the result is a complete ordering usable as
 #' plot_map(order = ...).
 #' @inheritParams select_active
-#' @param margin order by outgoing (\code{"rows"}) or incoming
+#' @param margin character(1): order by outgoing (\code{"rows"}) or incoming
 #'   (\code{"cols"}) significant counts.
-#' @param include_diag count the self-interaction diagonal.
+#' @param include_diag logical(1): count the self-interaction diagonal.
 #' @return character vector: a complete ordering of that margin's names.
 #' @examples
 #' data(demo_z)

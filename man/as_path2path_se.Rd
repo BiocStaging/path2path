@@ -7,7 +7,7 @@
 as_path2path_se(result)
 }
 \arguments{
-\item{result}{a standard `path2path()` result containing `M`.}
+\item{result}{a list, a standard `path2path()` result containing `M`.}
 }
 \value{
 a `SummarizedExperiment` with pathways as rows and readout

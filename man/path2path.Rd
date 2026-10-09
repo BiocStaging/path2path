@@ -11,24 +11,27 @@ path2path(
   stage2 = list(),
   jaccard_tau = 0.5,
   BPPARAM = BiocParallel::bpparam(),
-  verbose = TRUE
+  verbose = FALSE
 )
 }
 \arguments{
-\item{z}{perturbations x genes matrix (rownames = perturbed gene symbols).}
+\item{z}{numeric matrix, perturbations x genes (rownames = perturbed
+gene symbols, colnames = measured gene symbols).}
 
-\item{pathways}{named list of gene-symbol vectors.}
+\item{pathways}{named list of character vectors of gene symbols.}
 
 \item{stage1, stage2}{named lists of overrides forwarded to stage1_nes()
 and stage2_matrix().}
 
-\item{jaccard_tau}{mask threshold; NA_real_ disables masking.}
+\item{jaccard_tau}{numeric(1) in [0, 1]: mask threshold; NA_real_
+disables masking.}
 
 \item{BPPARAM}{a \code{BiocParallel} parameter object forwarded to both
 stages (a \code{BPPARAM} entry inside \code{stage1}/\code{stage2}
 takes precedence for that stage).}
 
-\item{verbose}{emit per-stage timing messages.}
+\item{verbose}{logical(1): emit per-stage timing messages
+(default \code{FALSE}).}
 }
 \value{
 list(nes, pval_stage1, M_raw, M, pval, padj, ..., config).

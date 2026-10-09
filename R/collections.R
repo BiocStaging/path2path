@@ -6,13 +6,14 @@
 #' applied later inside stage1_nes()/stage2_matrix(), which is where they
 #' matter statistically.
 #'
-#' @param collection one of "hallmark", "reactome", "kegg", "kegg_medicus",
+#' @param collection character(1), one of "hallmark", "reactome", "kegg",
+#'   "kegg_medicus",
 #'   "kegg_legacy", "pid", "wikipathways". Note that "kegg" resolves to
 #'   KEGG_MEDICUS (the current KEGG subcollection in MSigDB); use
 #'   "kegg_legacy" for the classic 186-set collection.
-#' @param min_size,max_size global size window applied when
+#' @param min_size,max_size integer(1) each: global size window applied when
 #'   `size_filter` is active for the collection.
-#' @param species passed to \code{msigdbr::msigdbr}.
+#' @param species character(1): passed to \code{msigdbr::msigdbr}.
 #' @return named list of character vectors
 #' @references
 #' Dolgalev I (2026). msigdbr: MSigDB Gene Sets for Multiple Organisms in a

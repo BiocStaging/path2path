@@ -23,31 +23,39 @@ plot_map(
 )
 }
 \arguments{
-\item{result}{a \code{path2path()} result.}
+\item{result}{a list as returned by \code{path2path()}.}
 
-\item{calibrated}{optional \code{calibrate_pvalues()} result (switches
+\item{calibrated}{`NULL` or a list as returned by
+\code{calibrate_pvalues()} (switches
 the cutoffs to Route B values).}
 
-\item{padj_cutoff, pval_cutoff}{significance cutoffs; non-NULL cutoffs
+\item{padj_cutoff, pval_cutoff}{`NULL` or numeric(1) each: significance
+cutoffs; non-NULL cutoffs
 conjoin, NULL disables one (at least one must be enabled).}
 
-\item{rows, cols}{optional name subsets applied before anything else.}
+\item{rows, cols}{`NULL` or character vectors: optional name subsets
+applied before anything else.}
 
-\item{drop_empty_rows, drop_empty_cols}{drop all-NA rows/columns.}
+\item{drop_empty_rows, drop_empty_cols}{logical(1) each: drop all-NA
+rows/columns.}
 
-\item{order}{a character vector or list(rows=, cols=) fixing the order.}
+\item{order}{`NULL`, a character vector, or list(rows=, cols=) fixing
+the order.}
 
-\item{cluster}{two-directional hierarchical clustering when no `order`.}
+\item{cluster}{logical(1): two-directional hierarchical clustering when
+no `order`.}
 
-\item{labels}{force axis labels on/off (default: on up to 60 pathways).}
+\item{labels}{`NULL` or logical(1): force axis labels on/off (default:
+on up to 60 pathways).}
 
-\item{zlim}{color range in NES units.}
+\item{zlim}{numeric(2): color range in NES units.}
 
-\item{main}{plot title.}
+\item{main}{`NULL` or character(1): plot title.}
 
-\item{colorbar}{draw the NES colorbar.}
+\item{colorbar}{logical(1): draw the NES colorbar.}
 
-\item{dot_cex}{significance-dot size (default scales with map size).}
+\item{dot_cex}{`NULL` or numeric(1): significance-dot size (default
+scales with map size).}
 }
 \value{
 (invisible) list(rows, cols): the plotted ordering, reusable as

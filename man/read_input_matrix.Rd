@@ -7,7 +7,8 @@
 read_input_matrix(path)
 }
 \arguments{
-\item{path}{CSV or CSV.GZ file; first column = perturbed gene symbols,
+\item{path}{character(1): CSV or CSV.GZ file; first column = perturbed
+gene symbols,
 remaining columns = measured genes.}
 }
 \value{

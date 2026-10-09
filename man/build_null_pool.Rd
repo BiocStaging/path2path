@@ -11,32 +11,43 @@ build_null_pool(
   out_dir = NULL,
   config = NULL,
   seed_base = NULL,
+  verbose = FALSE,
   ...
 )
 }
 \arguments{
-\item{z, pathways}{the inputs of the observed run.}
+\item{z, pathways}{the inputs of the observed run: `z` a numeric matrix
+(perturbations x genes, rownames = perturbed gene symbols) and
+`pathways` a named list of character vectors of gene symbols.}
 
-\item{B}{number of outer permutations.}
+\item{B}{integer(1): number of outer permutations.}
 
-\item{out_dir}{optional directory persisting each null map
+\item{out_dir}{`NULL` or character(1): optional directory persisting
+each null map
 (M_null_bNNN.rds), per-map BH discovery counts, and each null map's
 sorted nominal p-values; completed maps found there are reloaded
 instead of recomputed (resume). Use a separate directory for each input
 dataset, pathway collection, and pipeline configuration.}
 
-\item{config}{a `path2path()` result's `$config`, so null runs repeat the
-observed configuration exactly.}
+\item{config}{`NULL` or a list, a `path2path()` result's `$config`
+component, so null runs repeat the observed configuration exactly.}
 
-\item{seed_base}{if non-NULL, uses `seed_base + b` for the input
-permutation in run b. For exact reproducibility of the GSEA calculations,
-also use seeded `BPPARAM` objects in `config` or `...`.}
+\item{seed_base}{`NULL` or integer(1): if non-NULL, uses `seed_base + b`
+for the input permutation in run b. For exact reproducibility of the
+GSEA calculations, also use seeded `BPPARAM` objects in `config` or
+`...`.}
+
+\item{verbose}{logical(1): report per-permutation progress messages
+(default \code{FALSE}).}
 
 \item{...}{additional path2path() arguments; these override entries of
 `config` with the same name.}
 }
 \value{
-list(null_M = list of K x K matrices, pool_abs = sorted |M'|)
+a list with two components: `null_M`, a length-`B` list of
+  pathway x pathway numeric matrices (one null map per permutation), and
+  `pool_abs`, a sorted numeric vector pooling the absolute values of all
+  non-missing null-map entries.
 }
 \description{
 Runs the same path2path() pipeline on B permuted matrices and

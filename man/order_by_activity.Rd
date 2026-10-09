@@ -14,18 +14,20 @@ order_by_activity(
 )
 }
 \arguments{
-\item{result}{a \code{path2path()} result.}
+\item{result}{a list as returned by \code{path2path()}.}
 
-\item{calibrated}{optional \code{calibrate_pvalues()} result (switches
+\item{calibrated}{`NULL` or a list as returned by
+\code{calibrate_pvalues()} (switches
 the cutoffs to Route B values).}
 
-\item{padj_cutoff, pval_cutoff}{significance cutoffs; non-NULL cutoffs
+\item{padj_cutoff, pval_cutoff}{`NULL` or numeric(1) each: significance
+cutoffs; non-NULL cutoffs
 conjoin, NULL disables one (at least one must be enabled).}
 
-\item{margin}{order by outgoing (\code{"rows"}) or incoming
+\item{margin}{character(1): order by outgoing (\code{"rows"}) or incoming
 (\code{"cols"}) significant counts.}
 
-\item{include_diag}{count the self-interaction diagonal.}
+\item{include_diag}{logical(1): count the self-interaction diagonal.}
 }
 \value{
 character vector: a complete ordering of that margin's names.

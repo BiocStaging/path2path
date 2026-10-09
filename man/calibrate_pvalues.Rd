@@ -12,32 +12,44 @@ calibrate_pvalues(
   pool = NULL,
   q_thresh = 0.99,
   null_dir = NULL,
-  seed_base = NULL
+  seed_base = NULL,
+  verbose = FALSE
 )
 }
 \arguments{
-\item{result}{a path2path() result (uses result$M, and reuses
+\item{result}{a list as returned by path2path() (uses result$M, and reuses
 result$config so the null runs repeat the observed run's
 configuration exactly; there is deliberately no way to override it
 here, since mismatched null runs would invalidate the calibration.
 For full control, call build_null_pool() directly and pass its pool
 via `pool`).}
 
-\item{z, pathways}{the inputs that produced `result`.}
+\item{z, pathways}{the inputs that produced `result`: `z` a numeric
+matrix (perturbations x genes) and `pathways` a named list of
+character vectors of gene symbols. Both may be `NULL` when a
+precomputed `pool` is supplied.}
 
-\item{B}{number of outer permutations (ignored if `pool` given).}
+\item{B}{integer(1): number of outer permutations (ignored if `pool`
+given).}
 
-\item{pool}{optional sorted |M'| pool from build_null_pool()$pool_abs.}
+\item{pool}{`NULL` or numeric vector: optional sorted |M'| pool from
+build_null_pool()$pool_abs.}
 
-\item{q_thresh}{GPD threshold quantile of the pool (default 0.99); a
+\item{q_thresh}{numeric(1) in (0, 1): GPD threshold quantile of the
+pool (default 0.99); a
 fit-adequacy guard lowers it stepwise (0.975, 0.95, 0.90) if the fitted
 tail's finite endpoint falls below the largest observed |M|.}
 
-\item{null_dir}{optional directory: each null map is saved there as
+\item{null_dir}{`NULL` or character(1), optional directory: each null
+map is saved there as
 M_null_bNNN.rds (persistence only; forwarded to build_null_pool's
 out_dir).}
 
-\item{seed_base}{forwarded to \code{build_null_pool()}.}
+\item{seed_base}{`NULL` or integer(1): forwarded to
+\code{build_null_pool()}.}
+
+\item{verbose}{logical(1): forwarded to \code{build_null_pool()}
+(per-permutation progress messages; default \code{FALSE}).}
 }
 \value{
 list with K x K matrices `pval_gpd` (the calibrated p-values:

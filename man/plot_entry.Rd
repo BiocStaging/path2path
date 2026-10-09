@@ -7,13 +7,16 @@
 plot_entry(result, pathways, j, k, calibrated = NULL)
 }
 \arguments{
-\item{result}{a \code{path2path()} result.}
+\item{result}{a list as returned by \code{path2path()}.}
 
-\item{pathways}{the collection used to build `result`.}
+\item{pathways}{named list of character vectors: the collection used to
+build `result`.}
 
-\item{j, k}{pathway names: the perturbed (row) and readout (column) side.}
+\item{j, k}{character(1) each, pathway names: the perturbed (row) and
+readout (column) side.}
 
-\item{calibrated}{optional \code{calibrate_pvalues()} result; switches
+\item{calibrated}{`NULL` or a list as returned by
+\code{calibrate_pvalues()}; switches
 the title to Route B values.}
 }
 \value{

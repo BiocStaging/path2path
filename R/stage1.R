@@ -7,22 +7,27 @@
 #'
 #' @param z numeric matrix, perturbations x genes; rownames = perturbed gene
 #'   symbols, colnames = measured gene symbols. NAs are dropped per row.
-#' @param pathways named list of gene-symbol vectors.
-#' @param method "fgsea" (fgseaSimple, per-perturbation permutations) or
+#' @param pathways named list of character vectors of gene symbols.
+#' @param method character(1): "fgsea" (fgseaSimple, per-perturbation
+#'   permutations) or
 #'   "pooled" (one pooled null per pathway across perturbations; no p-values).
-#' @param exclude_target drop the perturbed gene from its own ranked list
+#' @param exclude_target logical(1): drop the perturbed gene from its own
+#'   ranked list
 #'   before scoring. This removes the tautological self-hit: the target is at
 #'   the top of L_m by construction, giving every pathway that contains it a
 #'   free hit. Default TRUE.
-#' @param negate apply the CRISPRi loss-of-function sign flip (s = -z).
+#' @param negate logical(1): apply the CRISPRi loss-of-function sign flip
+#'   (s = -z).
 #'   Default TRUE; set FALSE only for gain-of-function perturbations.
-#' @param b_prime pooled method only: random null draws per perturbation
+#' @param b_prime integer(1), pooled method only: random null draws per
+#'   perturbation
 #'   pooled into the per-pathway null (1 draw x thousands of perturbations
 #'   is already a large pool).
-#' @param nperm fgsea method only: permutations per ranked list for
+#' @param nperm integer(1), fgsea method only: permutations per ranked list for
 #'   \code{fgsea::fgseaSimple}. The default 1000 estimates the NES
 #'   accurately; downstream inference does not consume Stage 1 p-values.
-#' @param min_size,max_size effective gene-set size window, applied to the
+#' @param min_size,max_size integer(1) each: effective gene-set size
+#'   window, applied to the
 #'   intersection with each ranked list.
 #' @param BPPARAM a \code{BiocParallel} parameter object controlling
 #'   parallelisation over perturbations; default

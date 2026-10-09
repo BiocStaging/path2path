@@ -19,21 +19,27 @@ stage2_matrix(
 )
 }
 \arguments{
-\item{nes}{M x K Stage 1 NES matrix (rownames = perturbed gene symbols).}
+\item{nes}{numeric matrix, M x K Stage 1 NES values (rownames =
+perturbed gene symbols, colnames = pathway names).}
 
-\item{pathways}{full pathway list (gene symbols); restricted internally.}
+\item{pathways}{named list of character vectors: the full pathway
+collection (gene symbols); restricted internally.}
 
-\item{method}{"fgsea" (fgseaMultilevel, p-values) or "pooled".}
+\item{method}{character(1): "fgsea" (fgseaMultilevel, p-values) or
+"pooled".}
 
-\item{score_type}{"std" (default GSEA two-sided score), or "both" to run
+\item{score_type}{character(1): "std" (default GSEA two-sided score),
+or "both" to run
 scoreType "pos" and "neg" separately and return both extremes
 (M_pos / M_neg), which resolves bidirectionally-regulated pairs that
 cancel under "std".}
 
-\item{min_pu}{minimum members of a set in the perturbation universe
+\item{min_pu}{integer(1): minimum members of a set in the perturbation
+universe
 (rownames of `nes`) for the set to be tested at all.}
 
-\item{min_col_size}{minimum members of a set actually present in one
+\item{min_col_size}{integer(1): minimum members of a set actually
+present in one
 column's non-NA ranking for that entry to be scored. The universe
 filter `min_pu` is global; within a single column, NA entries can
 reduce a set's effective size below `min_pu`, and `min_col_size`
@@ -41,14 +47,18 @@ bounds it from below (default 2, ruling out degenerate
 single-member scores). Raise it (e.g. to `min_pu`) for a stricter
 per-entry guarantee.}
 
-\item{max_size}{maximum effective set size within a column's ranking.}
+\item{max_size}{integer(1): maximum effective set size within a column's
+ranking.}
 
-\item{min_valid}{minimum non-NA entries a column needs to be ranked at all.}
+\item{min_valid}{integer(1): minimum non-NA entries a column needs to be
+ranked at all.}
 
-\item{eps}{\code{fgsea::fgseaMultilevel} accuracy floor (0 = exact
+\item{eps}{numeric(1): \code{fgsea::fgseaMultilevel} accuracy floor
+(0 = exact
 estimation of arbitrarily small p-values).}
 
-\item{b_prime}{pooled method only: random null draws per column pooled
+\item{b_prime}{integer(1), pooled method only: random null draws per
+column pooled
 into the per-pathway-row null.}
 
 \item{BPPARAM}{a \code{BiocParallel} parameter object controlling

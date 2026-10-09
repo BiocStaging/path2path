@@ -7,7 +7,7 @@
 plot_calibration(calibrated)
 }
 \arguments{
-\item{calibrated}{a \code{calibrate_pvalues()} result carrying
+\item{calibrated}{a list as returned by \code{calibrate_pvalues()} carrying
 \code{pool_abs} and \code{gpd}.}
 }
 \value{

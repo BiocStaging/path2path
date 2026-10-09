@@ -7,7 +7,7 @@
 pathway_jaccard(pathways)
 }
 \arguments{
-\item{pathways}{named list of gene-symbol vectors.}
+\item{pathways}{named list of character vectors of gene symbols.}
 }
 \value{
 K x K similarity matrix (diagonal set to 0; it is never masked).

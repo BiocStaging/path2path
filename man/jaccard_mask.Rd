@@ -7,13 +7,15 @@
 jaccard_mask(M, pathways, tau = 0.5, jaccard = NULL)
 }
 \arguments{
-\item{M}{K x K matrix to mask.}
+\item{M}{K x K numeric matrix to mask (dimnames = pathway names).}
 
-\item{pathways}{named list of gene-symbol vectors.}
+\item{pathways}{named list of character vectors of gene symbols.}
 
-\item{tau}{overlap threshold; entries with Jaccard > tau become NA.}
+\item{tau}{numeric(1) in [0, 1]: overlap threshold; entries with
+Jaccard > tau become NA.}
 
-\item{jaccard}{optional precomputed \code{pathway_jaccard()} matrix.}
+\item{jaccard}{`NULL` or numeric matrix: optional precomputed
+\code{pathway_jaccard()} matrix.}
 }
 \value{
 M with high-overlap off-diagonal entries set to NA.

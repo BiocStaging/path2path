@@ -30,19 +30,28 @@ permute_input <- function(z) {
 #'
 #' @param ... additional path2path() arguments; these override entries of
 #'   `config` with the same name.
-#' @param z,pathways the inputs of the observed run.
-#' @param B number of outer permutations.
-#' @param out_dir optional directory persisting each null map
+#' @param z,pathways the inputs of the observed run: `z` a numeric matrix
+#'   (perturbations x genes, rownames = perturbed gene symbols) and
+#'   `pathways` a named list of character vectors of gene symbols.
+#' @param B integer(1): number of outer permutations.
+#' @param out_dir `NULL` or character(1): optional directory persisting
+#'   each null map
 #'   (M_null_bNNN.rds), per-map BH discovery counts, and each null map's
 #'   sorted nominal p-values; completed maps found there are reloaded
 #'   instead of recomputed (resume). Use a separate directory for each input
 #'   dataset, pathway collection, and pipeline configuration.
-#' @param config a `path2path()` result's `$config`, so null runs repeat the
-#'   observed configuration exactly.
-#' @param seed_base if non-NULL, uses `seed_base + b` for the input
-#'   permutation in run b. For exact reproducibility of the GSEA calculations,
-#'   also use seeded `BPPARAM` objects in `config` or `...`.
-#' @return list(null_M = list of K x K matrices, pool_abs = sorted |M'|)
+#' @param config `NULL` or a list, a `path2path()` result's `$config`
+#'   component, so null runs repeat the observed configuration exactly.
+#' @param seed_base `NULL` or integer(1): if non-NULL, uses `seed_base + b`
+#'   for the input permutation in run b. For exact reproducibility of the
+#'   GSEA calculations, also use seeded `BPPARAM` objects in `config` or
+#'   `...`.
+#' @param verbose logical(1): report per-permutation progress messages
+#'   (default \code{FALSE}).
+#' @return a list with two components: `null_M`, a length-`B` list of
+#'   pathway x pathway numeric matrices (one null map per permutation), and
+#'   `pool_abs`, a sorted numeric vector pooling the absolute values of all
+#'   non-missing null-map entries.
 #' @examples
 #' data(demo_z)
 #' data(demo_pathways)
@@ -55,11 +64,14 @@ permute_input <- function(z) {
 #' length(pool$pool_abs)
 #' @export
 build_null_pool <- function(z, pathways, B = 10L, out_dir = NULL,
-                            config = NULL, seed_base = NULL, ...) {
+                            config = NULL, seed_base = NULL,
+                            verbose = FALSE, ...) {
     .check_matrix_input(z, "z")
     .check_pathways(pathways)
     .check_positive_integer(B, "B")
     if (!is.null(seed_base)) .check_integer(seed_base, "seed_base")
+    if (!is.logical(verbose) || length(verbose) != 1L || is.na(verbose))
+        stop("`verbose` must be TRUE or FALSE")
     if (!is.null(out_dir) &&
         (!is.character(out_dir) || length(out_dir) != 1L || is.na(out_dir))) {
         stop("`out_dir` must be NULL or one non-missing path")
@@ -79,8 +91,9 @@ build_null_pool <- function(z, pathways, B = 10L, out_dir = NULL,
             file.path(out_dir, sprintf("M_null_b%03d.rds", b)) else NULL
         ## A per-run seed makes the input permutation reproducible in isolation.
         if (!is.null(m_file) && file.exists(m_file)) {
-            message(sprintf("[%s] null permutation %d / %d (cached)",
-                format(Sys.time(), "%H:%M:%S"), b, B))
+            if (verbose)
+                message(sprintf("[%s] null permutation %d / %d (cached)",
+                    format(Sys.time(), "%H:%M:%S"), b, B))
             cached <- readRDS(m_file)
             expected <- c(length(pathways), length(pathways))
             if (!is.matrix(cached) || !identical(dim(cached), expected) ||
@@ -93,8 +106,9 @@ build_null_pool <- function(z, pathways, B = 10L, out_dir = NULL,
             null_M[[b]] <- cached
             next
         }
-        message(sprintf("[%s] null permutation %d / %d",
-            format(Sys.time(), "%H:%M:%S"), b, B))
+        if (verbose)
+            message(sprintf("[%s] null permutation %d / %d",
+                format(Sys.time(), "%H:%M:%S"), b, B))
         z_null <- if (is.null(seed_base)) {
             permute_input(z)
         } else {
@@ -233,16 +247,22 @@ gpd_tail_fit <- function(pool_abs_sorted, q_thresh = 0.99) {
 #' Expensive: B full pipeline runs. `pool` may be supplied from a previous
 #' build_null_pool() to skip recomputation.
 #'
-#' @param result a path2path() result (uses result$M, and reuses
+#' @param result a list as returned by path2path() (uses result$M, and reuses
 #'   result$config so the null runs repeat the observed run's
 #'   configuration exactly; there is deliberately no way to override it
 #'   here, since mismatched null runs would invalidate the calibration.
 #'   For full control, call build_null_pool() directly and pass its pool
 #'   via `pool`).
-#' @param z,pathways the inputs that produced `result`.
-#' @param B number of outer permutations (ignored if `pool` given).
-#' @param pool optional sorted |M'| pool from build_null_pool()$pool_abs.
-#' @param null_dir optional directory: each null map is saved there as
+#' @param z,pathways the inputs that produced `result`: `z` a numeric
+#'   matrix (perturbations x genes) and `pathways` a named list of
+#'   character vectors of gene symbols. Both may be `NULL` when a
+#'   precomputed `pool` is supplied.
+#' @param B integer(1): number of outer permutations (ignored if `pool`
+#'   given).
+#' @param pool `NULL` or numeric vector: optional sorted |M'| pool from
+#'   build_null_pool()$pool_abs.
+#' @param null_dir `NULL` or character(1), optional directory: each null
+#'   map is saved there as
 #'   M_null_bNNN.rds (persistence only; forwarded to build_null_pool's
 #'   out_dir).
 #' @return list with K x K matrices `pval_gpd` (the calibrated p-values:
@@ -253,10 +273,14 @@ gpd_tail_fit <- function(pool_abs_sorted, q_thresh = 0.99) {
 #'   result$padj), and `pval_pool` (pooled empirical p-values, kept for
 #'   diagnostics); plus `gpd` (fit parameters) and `pool_abs` (the pool,
 #'   reusable via `pool =`).
-#' @param q_thresh GPD threshold quantile of the pool (default 0.99); a
+#' @param q_thresh numeric(1) in (0, 1): GPD threshold quantile of the
+#'   pool (default 0.99); a
 #'   fit-adequacy guard lowers it stepwise (0.975, 0.95, 0.90) if the fitted
 #'   tail's finite endpoint falls below the largest observed |M|.
-#' @param seed_base forwarded to \code{build_null_pool()}.
+#' @param seed_base `NULL` or integer(1): forwarded to
+#'   \code{build_null_pool()}.
+#' @param verbose logical(1): forwarded to \code{build_null_pool()}
+#'   (per-permutation progress messages; default \code{FALSE}).
 #' @references
 #' Knijnenburg TA, Wessels LFA, Reinders MJT, Shmulevich I (2009). Fewer
 #' permutations, more accurate p-values. Bioinformatics 25:i161-i168.
@@ -273,7 +297,7 @@ gpd_tail_fit <- function(pool_abs_sorted, q_thresh = 0.99) {
 #' @export
 calibrate_pvalues <- function(result, z = NULL, pathways = NULL, B = 50L,
                               pool = NULL, q_thresh = 0.99, null_dir = NULL,
-                              seed_base = NULL) {
+                              seed_base = NULL, verbose = FALSE) {
     if (is.null(result$M) || !is.matrix(result$M)) {
         stop("`result` must be a standard path2path result containing `$M`")
     }
@@ -296,7 +320,8 @@ calibrate_pvalues <- function(result, z = NULL, pathways = NULL, B = 50L,
                 "in `result` for the null runs"
             )
         pool <- build_null_pool(z, pathways, B = B, config = config,
-            out_dir = null_dir, seed_base = seed_base)$pool_abs
+            out_dir = null_dir, seed_base = seed_base,
+            verbose = verbose)$pool_abs
     }
     if (!is.numeric(pool) || !length(pool) || anyNA(pool) ||
         any(!is.finite(pool)) || any(pool < 0)) {
