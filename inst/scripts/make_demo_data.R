@@ -29,3 +29,10 @@ for (p in perts) demo_z[p, p] <- -8
 
 save(demo_pathways, file = "data/demo_pathways.rda", compress = "xz")
 save(demo_z, file = "data/demo_z.rda", compress = "xz")
+
+# CSV form of the same matrix, in the on-disk format read_input_matrix()
+# expects (first column = perturbed gene symbols); used by the vignette to
+# demonstrate the file-based entry point.
+data.table::fwrite(
+    data.table::data.table(perturbation = rownames(demo_z), demo_z),
+    "inst/extdata/zscore_demo.csv.gz")

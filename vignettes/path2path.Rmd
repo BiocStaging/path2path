@@ -47,6 +47,30 @@ self-interaction diagonal), effective-size filters are applied in both
 stages, and entries whose pathway pair overlaps at Jaccard $> 0.5$ are
 masked.
 
+## Relation to the Bioconductor ecosystem
+
+`path2path` builds directly on Bioconductor infrastructure: enrichment
+statistics are computed by `r Biocpkg("fgsea")`, pathway collections are
+retrieved through `r CRANpkg("msigdbr")`, parallelization uses
+`r Biocpkg("BiocParallel")` backends throughout, and inputs and results
+interconvert with `SummarizedExperiment` objects
+(`as_path2path_matrix()`, `as_path2path_se()`), so maps drop into any
+`r Biocpkg("SummarizedExperiment")`-based workflow.
+
+Its scope differs from existing enrichment packages. Tools such as
+`r Biocpkg("fgsea")`, `r Biocpkg("clusterProfiler")`, or
+`r Biocpkg("GSVA")` answer the question *"which pathways respond in this
+contrast (or sample)?"* --- one enrichment analysis per ranked list, with
+pathways as the output rows. `path2path` asks the next question that a
+genome-scale Perturb-seq screen makes answerable: *"which pathway, when
+perturbed, moves which other pathway, and in which direction?"* Its output
+is not a pathway list but an asymmetric pathway-by-pathway matrix, where
+rows are perturbed pathways and columns are transcriptional readouts. To
+our knowledge no current Bioconductor package derives such directional
+pathway-level interaction maps from Perturb-seq data; the closest
+workflows (per-perturbation enrichment followed by manual aggregation)
+correspond to running only Stage 1 of this package.
+
 # A five-minute tour on synthetic data
 
 The package ships a small simulated dataset with two planted relations:
@@ -59,27 +83,63 @@ data(demo_pathways)
 dim(demo_z)
 ```
 
-Build the map (a serial backend keeps this vignette deterministic; on real
-data use the default `BiocParallel::bpparam()`):
+Build the map. The arguments:
+
+* `demo_z`: the perturbation-by-gene numeric matrix of signed
+  differential-expression statistics (rownames = perturbed gene symbols).
+* `demo_pathways`: a named list of character vectors of gene symbols.
+* `stage1`: overrides forwarded to `stage1_nes()`. Here `nperm = 200` sets
+  the per-perturbation permutation count (the default `1000` is more than
+  this toy dataset needs) and `min_size = 5` lowers the minimum effective
+  gene-set size from its production default of 15, because the demo
+  pathways have 30 members each.
+* `stage2`: overrides forwarded to `stage2_matrix()`. `min_pu = 5` lowers
+  the minimum number of pathway members that must be present among the
+  perturbations (default 10) to match the small demo.
+* `BPPARAM`: any `BiocParallel` backend; a serial backend with a fixed
+  `RNGseed` keeps this vignette deterministic. On real data use the
+  default `BiocParallel::bpparam()`.
 
 ```{r pipeline}
 res <- path2path(demo_z, demo_pathways,
     stage1 = list(nperm = 200, min_size = 5),
     stage2 = list(min_pu = 5),
-    BPPARAM = BiocParallel::SerialParam(RNGseed = 1),
-    verbose = FALSE)
+    BPPARAM = BiocParallel::SerialParam(RNGseed = 1))
 round(res$M, 2)
 ```
 
-Both planted relations are recovered with the right sign and direction, and
-the reverse entries are untestable (B and D members were not perturbed, so
-those rows fall below the Stage 2 universe filter):
+The result is a list whose central component `M` is the pathway-by-pathway
+map: entry $(j, k)$ is a Stage 2 normalized enrichment score, positive when
+perturbing members of pathway $j$ (rows) coherently activates pathway $k$
+(columns), negative for suppression, and `NA` where the entry is untestable
+(too few of $j$'s members among the perturbations) or masked by the Jaccard
+overlap filter --- in the printed matrix above, the testable rows are
+exactly A, C, and E, the three pathways whose members were perturbed.
+Alongside `M`, the list carries the Stage 1 matrices (`nes`,
+`pval_stage1`), the unmasked map (`M_raw`), the per-entry nominal p-values
+(`pval`), and their Benjamini--Hochberg adjustment over all populated
+entries (`padj`):
 
 ```{r planted}
-res$M["PATHWAY_A", "PATHWAY_B"]   # activation, > 0
-res$M["PATHWAY_C", "PATHWAY_D"]   # suppression, < 0
+res$M["PATHWAY_A", "PATHWAY_B"]   # planted activation, > 0
+res$M["PATHWAY_C", "PATHWAY_D"]   # planted suppression, < 0
 res$padj["PATHWAY_A", "PATHWAY_B"]
+res$padj["PATHWAY_C", "PATHWAY_D"]
 ```
+
+Both planted relations are recovered with the right sign and direction,
+as the two strongest entries of the map. The reverse entries (B acting
+on A, D on C) are untestable because B and D members were not perturbed,
+so those rows fall below the Stage 2 universe filter. Note that in a toy
+map this small (18 testable entries), the two planted blocks also leave
+weaker significant echoes in other entries: once A's members occupy one
+extreme of a column's ranking, the remaining pathways' members are
+displaced from uniformity too. On realistically sized collections this
+rank-compression effect is diluted across thousands of perturbations;
+here it is a useful reminder that entries of $\mathbf{M}$ are not
+independent tests, which is exactly why the package's inference treats
+the populated map as one BH family and offers whole-pipeline permutation
+(Route B, below) for entries that will be individually reported.
 
 Plot the map with significance dots:
 
@@ -98,16 +158,28 @@ plot_entry(res, demo_pathways, "PATHWAY_A", "PATHWAY_B")
 
 For a real screen, the input is the perturbation-by-gene matrix of
 differential-expression statistics (a DESeq2 Wald $z$, a $z$-normalized
-pseudobulk difference, or a signed log-fold change), with rows named by the
-perturbed gene symbols:
+pseudobulk difference, or a signed log-fold change), with rows named by
+the perturbed gene symbols. Such matrices are typically stored as
+(gzipped) CSV with the perturbation names in the first column;
+`read_input_matrix()` reads that format. The package ships the demo
+matrix in this on-disk form, which stands in for your own file below:
 
-```{r real, eval = FALSE}
-z <- read_input_matrix("zscore_myscreen.csv.gz")
-pathways <- load_pathways("hallmark")     # or "reactome", "kegg_legacy", ...
-res <- path2path(z, pathways)
-write_result(res, dir = "results", tag = "myscreen",
-    collection = "hallmark")
+```{r real}
+f <- system.file("extdata", "zscore_demo.csv.gz", package = "path2path")
+z <- read_input_matrix(f)  # your screen: "zscore_myscreen.csv.gz"
+all.equal(z, demo_z)       # the demo matrix, up to CSV round-trip precision
+write_result(res, dir = file.path(tempdir(), "results"),
+    tag = "demo", collection = "demo")
+list.files(file.path(tempdir(), "results"))
 ```
+
+On real data you would draw `pathways` from MSigDB instead of the demo
+list --- `load_pathways("hallmark")` (or `"reactome"`, `"kegg_legacy"`,
+...) downloads the collection through `r CRANpkg("msigdbr")` --- and run
+`path2path(z, pathways)` with the production defaults.
+`write_result()` writes each result component (`M`, `pval`, `padj`, the
+Stage 1 matrices) as a CSV named
+`<component>_matrix_<tag>_<collection>_<method>.csv`, as listed above.
 
 If the statistics are stored in a `SummarizedExperiment` assay with genes in
 rows and perturbations in columns, use `as_path2path_matrix()` to transpose
@@ -134,25 +206,51 @@ distribution of the nominal p-values was close to uniform over the range that
 could be assessed by permutation.
 
 For *individually examined* strong entries, **Route B** reruns the full
-pipeline on row/column-permuted inputs, pools the null $|\mathbf{M}'|$ values,
-and extrapolates the extreme tail with a generalized-Pareto fit
-[@knijnenburg2009]:
+pipeline on row/column-permuted inputs, pools the null $|\mathbf{M}'|$
+values, and extrapolates the extreme tail with a generalized-Pareto (GPD)
+fit [@knijnenburg2009]. The arguments: `res` is the observed
+`path2path()` result (its stored `$config` is reused so the null runs
+repeat the observed configuration exactly), `demo_z`/`demo_pathways` are
+the inputs that produced it, `B` is the number of whole-pipeline
+permutations (`B = 50` is the function default and takes a minute or
+two on the demo data; production
+runs in the accompanying manuscript used `B` = 20--50 on maps with two
+to nearly four orders of magnitude more populated entries), and
+`seed_base` fixes the permutation in
+null run $b$ to `seed_base + b`, making the calibration reproducible
+(the GSEA side is already seeded here through the `RNGseed` backend
+stored in `res$config`). This is the one deliberately expensive chunk of
+the vignette --- Route B's point is to pay $B$ full pipeline runs for a
+null distribution of the *entire* construction:
 
-```{r routeb, eval = FALSE}
+```{r routeb}
 cal <- calibrate_pvalues(res, demo_z, demo_pathways, B = 50, seed_base = 42)
-cal$gpd[c("u", "xi", "beta", "n_exc")]
+unlist(cal$gpd[c("u", "xi", "beta", "n_exc", "q_used")])
 cal$pval_gpd["PATHWAY_A", "PATHWAY_B"]
+cal$pval_pool["PATHWAY_A", "PATHWAY_B"]
 ```
 
-```{r calplot, eval = FALSE, fig.width = 7, fig.height = 3.5}
+Reading the output: `cal$gpd` reports the tail fit --- threshold `u` (the
+`q_used` quantile of the pooled null), shape `xi` and scale `beta` of the
+GPD fitted to the `n_exc` exceedances. `cal$pval_pool` is the pooled
+empirical p-value, floored at $1/(L+1)$ for a pool of $L$ null entries;
+`cal$pval_gpd` equals it below the threshold and replaces it with the GPD
+tail extrapolation above, which is why the planted A$\to$B entry ---
+stronger than every one of the `r length(cal$pool_abs)` pooled null
+values --- obtains a p-value well below the pooled floor.
+`cal$padj_gpd` applies one BH family over the populated entries of
+`pval_gpd`. The calibration plot compares the nominal (Route A) and
+calibrated (Route B) p-values entry by entry:
+
+```{r calplot, fig.width = 7, fig.height = 3.5}
 plot_calibration(cal)
 ```
 
-`seed_base` makes each input permutation reproducible. For exact
-reproducibility of the full null runs, also supply seeded `BPPARAM` objects;
-`null_dir` persists completed null maps so interrupted runs can resume. Route A
-provides the computationally lighter default for routine screening, while
-Route B carries uncertainty from both stages through the permutation.
+For long production runs, `null_dir` persists each completed null map so
+interrupted runs resume, and the returned `cal$pool_abs` can be passed
+back via `pool =` to recalibrate without recomputation. Route A provides
+the computationally lighter default for routine screening, while Route B
+carries uncertainty from both stages through the permutation.
 
 # Session info
 
