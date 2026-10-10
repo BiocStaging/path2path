@@ -1,7 +1,7 @@
 #' Read a z-score CSV (rows = perturbed gene symbols in first column).
 #' @param path character(1): CSV or CSV.GZ file; first column = perturbed
-#'   gene symbols,
-#'   remaining columns = measured genes.
+#'   gene symbols, remaining columns = measured genes. Reading gzipped
+#'   files requires the \pkg{R.utils} package (listed in Suggests).
 #' @return numeric matrix with dimnames.
 #' @examples
 #' data(demo_z)

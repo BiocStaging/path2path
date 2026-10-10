@@ -1,3 +1,11 @@
+# path2path 0.99.4
+
+* Declared `R.utils` in Suggests: `data.table::fread()` needs it to read
+  the gzipped demo matrix that the vignette and `read_input_matrix()`
+  examples use. Its absence broke the 0.99.3 vignette build on the
+  Bioconductor build machines (it was present locally, which masked the
+  missing declaration).
+
 # path2path 0.99.3
 
 Changes responding to the first round of Bioconductor review:
